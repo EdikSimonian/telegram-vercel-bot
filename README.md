@@ -13,7 +13,7 @@ A minimal Python Telegram bot running on Vercel (free tier) with persistent conv
 | Service | Purpose | Free tier |
 |---|---|---|
 | [Telegram](https://telegram.org) | The bot platform | Always free |
-| [Google AI Studio](https://aistudio.google.com) | Gemini AI API | 1,500 req/day, 1M tokens/day |
+| [Google AI Studio](https://aistudio.google.com) | Gemini AI API | 250 req/day, 10 req/min |
 | [Upstash](https://upstash.com) | Redis for conversation memory | 10,000 req/day |
 | [Vercel](https://vercel.com) | Hosting the bot | 100GB bandwidth/month |
 | [GitHub](https://github.com) | Source code (Vercel deploys from here) | Always free |
