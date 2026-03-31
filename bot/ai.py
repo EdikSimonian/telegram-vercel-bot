@@ -1,76 +1,42 @@
-import json
 from bot.clients import ai
 from bot.config import MODEL, SYSTEM_PROMPT, TAVILY_API_KEY
 from bot.history import get_history, save_history
 
-# Tool definition — only active when BRAVE_API_KEY is set
-TOOLS = [
-    {
-        "type": "function",
-        "function": {
-            "name": "web_search",
-            "description": "Search the web for current information, recent news, or facts you are unsure about.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "query": {"type": "string", "description": "The search query"}
-                },
-                "required": ["query"],
-            },
-        },
-    }
-] if TAVILY_API_KEY else []
+# Keywords that suggest the query needs current/real-time information
+SEARCH_TRIGGERS = [
+    "today", "latest", "current", "news", "now", "recent", "this week",
+    "this month", "this year", "happened", "who won", "what is happening",
+    "weather", "price", "score", "update", "announce", "release",
+]
+
+
+def needs_search(text: str) -> bool:
+    text_lower = text.lower()
+    return any(trigger in text_lower for trigger in SEARCH_TRIGGERS)
 
 
 def ask_ai(user_id: int, user_message: str) -> str:
     history = get_history(user_id)
     history.append({"role": "user", "content": user_message})
 
-    messages = [{"role": "system", "content": SYSTEM_PROMPT}] + history
-    kwargs = {"model": MODEL, "messages": messages}
-    if TOOLS:
-        kwargs["tools"] = TOOLS
-        kwargs["tool_choice"] = "auto"
+    messages = [{"role": "system", "content": SYSTEM_PROMPT}]
 
-    response = ai.chat.completions.create(**kwargs)
-    message = response.choices[0].message
-
-    # If the AI called the search tool, execute it and get a final response
-    if message.tool_calls:
-        from bot.search import web_search
-
-        tool_call = message.tool_calls[0]
-        query = json.loads(tool_call.function.arguments)["query"]
-
+    # Inject search results when the query needs current information
+    if TAVILY_API_KEY and needs_search(user_message):
         try:
-            search_results = web_search(query)
+            from bot.search import web_search
+            results = web_search(user_message)
+            messages.append({
+                "role": "system",
+                "content": f"Web search results for context:\n\n{results}",
+            })
         except Exception as e:
-            search_results = f"Search failed: {e}"
+            print(f"Search error: {e}")
 
-        # Build the follow-up conversation including the tool result
-        followup = messages + [
-            {
-                "role": "assistant",
-                "content": message.content,
-                "tool_calls": [
-                    {
-                        "id": tool_call.id,
-                        "type": tool_call.type,
-                        "function": {
-                            "name": tool_call.function.name,
-                            "arguments": tool_call.function.arguments,
-                        },
-                    }
-                ],
-            },
-            {"role": "tool", "tool_call_id": tool_call.id, "content": search_results},
-        ]
+    messages += history
 
-        final = ai.chat.completions.create(model=MODEL, messages=followup)
-        reply = final.choices[0].message.content
-    else:
-        reply = message.content
-
+    response = ai.chat.completions.create(model=MODEL, messages=messages)
+    reply = response.choices[0].message.content
     history.append({"role": "assistant", "content": reply})
     save_history(user_id, history)
     return reply
