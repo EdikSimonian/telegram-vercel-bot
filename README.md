@@ -179,11 +179,12 @@ Copy the `https://...ngrok-free.app` URL and re-run the `setWebhook` curl from S
 
 ## Customisation
 
-| What to change | Where |
+| What to change | How |
 |---|---|
-| Bot personality / instructions | `SYSTEM_PROMPT` in `api/index.py` |
-| AI model | `MODEL` in `api/index.py` |
-| Conversation memory length | `MAX_HISTORY` in `api/index.py` |
+| Bot personality / instructions | Edit `SYSTEM_PROMPT` in `api/index.py` |
+| AI model | Set `AI_MODEL` env var (e.g. `llama3.1-8b`, `gpt-oss-120b`) |
+| AI provider | Set `AI_BASE_URL` env var (any OpenAI-compatible endpoint) |
+| Conversation memory length | Edit `MAX_HISTORY` in `api/index.py` |
 | Add a new command | Add a `@bot.message_handler(commands=["yourcommand"])` function |
 
 ---

@@ -11,14 +11,14 @@ CEREBRAS_API_KEY = os.environ["CEREBRAS_API_KEY"]
 UPSTASH_URL     = os.environ["UPSTASH_REDIS_REST_URL"]
 UPSTASH_TOKEN   = os.environ["UPSTASH_REDIS_REST_TOKEN"]
 
-MODEL         = "llama3.1-8b"
-CEREBRAS_BASE = "https://api.cerebras.ai/v1"
+MODEL         = os.environ.get("AI_MODEL", "gpt-oss-120b")
+AI_BASE_URL   = os.environ.get("AI_BASE_URL", "https://api.cerebras.ai/v1")
 SYSTEM_PROMPT = "You are a helpful assistant."
 MAX_HISTORY   = 20  # number of messages kept per user (10 conversation turns)
 
 # ── Clients ────────────────────────────────────────────────────────────────────
 bot   = telebot.TeleBot(TELEGRAM_TOKEN, threaded=False)
-ai    = OpenAI(base_url=CEREBRAS_BASE, api_key=CEREBRAS_API_KEY)
+ai    = OpenAI(base_url=AI_BASE_URL, api_key=CEREBRAS_API_KEY)
 redis = Redis(url=UPSTASH_URL, token=UPSTASH_TOKEN)
 app   = Flask(__name__)
 
