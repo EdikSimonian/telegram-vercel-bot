@@ -11,7 +11,7 @@ GOOGLE_API_KEY = os.environ["GOOGLE_API_KEY"]
 UPSTASH_URL    = os.environ["UPSTASH_REDIS_REST_URL"]
 UPSTASH_TOKEN  = os.environ["UPSTASH_REDIS_REST_TOKEN"]
 
-MODEL         = "gemini-2.0-flash"
+MODEL         = "gemini-2.0-flash-lite"
 GEMINI_BASE   = "https://generativelanguage.googleapis.com/v1beta/openai/"
 SYSTEM_PROMPT = "You are a helpful assistant."
 MAX_HISTORY   = 20  # number of messages kept per user (10 conversation turns)
@@ -86,7 +86,7 @@ def handle_message(message):
         bot.reply_to(message, reply)
     except Exception as e:
         print(f"Error: {e}")
-        bot.reply_to(message, f"Error: {e}")
+        bot.reply_to(message, "Something went wrong. Please try again.")
 
 # ── Webhook endpoint ───────────────────────────────────────────────────────────
 @app.route("/api/webhook", methods=["POST"])
