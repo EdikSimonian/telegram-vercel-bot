@@ -6,13 +6,19 @@ from openai import OpenAI
 from upstash_redis import Redis
 
 # ── Configuration ──────────────────────────────────────────────────────────────
+# Telegram
 TELEGRAM_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"].strip()
-AI_API_KEY     = os.environ["AI_API_KEY"].strip()
-UPSTASH_URL    = os.environ["UPSTASH_REDIS_REST_URL"].strip()
-UPSTASH_TOKEN  = os.environ["UPSTASH_REDIS_REST_TOKEN"].strip()
 
-AI_BASE_URL   = os.environ.get("AI_BASE_URL", "https://api.cerebras.ai/v1").strip()
-MODEL         = os.environ.get("AI_MODEL", "llama3.1-8b").strip()
+# AI provider
+AI_API_KEY  = os.environ["AI_API_KEY"].strip()
+AI_BASE_URL = os.environ.get("AI_BASE_URL", "https://api.cerebras.ai/v1").strip()
+MODEL       = os.environ.get("AI_MODEL", "llama3.1-8b").strip()
+
+# Redis
+UPSTASH_URL   = os.environ["UPSTASH_REDIS_REST_URL"].strip()
+UPSTASH_TOKEN = os.environ["UPSTASH_REDIS_REST_TOKEN"].strip()
+
+# App
 SYSTEM_PROMPT = "You are a helpful assistant."
 MAX_HISTORY   = 20  # messages kept per user (10 conversation turns)
 
