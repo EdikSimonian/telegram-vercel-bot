@@ -2,3 +2,4 @@ flask
 pyTelegramBotAPI
 openai
 upstash-redis
+pytest
