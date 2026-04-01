@@ -143,7 +143,7 @@ vercel --prod
 
 Safe search is always set to **strict**. Without this key the bot works normally — web search is simply disabled.
 
-When search is used, the bot appends `_[Web search used]_` to its reply so you know the answer is based on live data. Results are cached for 10 minutes, so repeated questions don't burn your quota.
+When search is used, the bot appends a **Sources:** section with links to every page it used. Results are cached for 10 minutes, so repeated questions don't burn your quota.
 
 ---
 
@@ -193,21 +193,32 @@ You should see: `{"ok":true,"result":true}`
 ```
 VercelTelegramBot/
 ├── api/
-│   └── index.py          # Entry point — Flask app and webhook route only
+│   └── index.py          # Entry point — Flask app, webhook route, secret verification
 ├── bot/
 │   ├── config.py         # All env vars and constants
 │   ├── clients.py        # bot, ai, redis instances
-│   ├── handlers.py       # Telegram commands — add new commands here
-│   ├── ai.py             # AI call with optional web search tool
-│   ├── search.py         # Brave Search integration
-│   ├── history.py        # Conversation memory (Redis)
-│   ├── rate_limit.py     # Per-user rate limiting
-│   └── helpers.py        # Utilities (send_reply, should_respond)
-├── tests/                # Unit tests
+│   ├── ai.py             # AI call with retry logic, web search injection, source citations
+│   ├── search.py         # Tavily web search with Redis result caching
+│   ├── history.py        # Conversation memory (Redis, graceful degradation)
+│   ├── rate_limit.py     # Per-user rate limiting (graceful degradation)
+│   ├── helpers.py        # Utilities (send_reply, should_respond)
+│   └── handlers.py       # Telegram commands — add new commands here
+├── tests/
+│   ├── conftest.py       # Mocks for running tests without real API keys
+│   ├── test_ai.py
+│   ├── test_helpers.py
+│   ├── test_history.py
+│   ├── test_rate_limit.py
+│   └── test_search.py
+├── .github/
+│   └── workflows/
+│       └── ci.yml        # Runs tests on every push and pull request
 ├── .env.example          # Copy to .env for local dev (never commit .env)
 ├── .gitignore
+├── Makefile              # install / test / deploy shortcuts
 ├── requirements.txt
 ├── vercel.json
+├── CLAUDE.md             # Agent-readable project guide
 └── README.md
 ```
 
@@ -216,9 +227,9 @@ VercelTelegramBot/
 ## Local development
 
 ```bash
-pip install -r requirements.txt
-cp .env.example .env    # fill in your real values
-flask --app api/index run --port 3000
+make install             # creates .venv and installs dependencies
+cp .env.example .env     # fill in your real values
+.venv/bin/flask --app api/index run --port 3000
 ```
 
 To test with Telegram locally, install [ngrok](https://ngrok.com), then:

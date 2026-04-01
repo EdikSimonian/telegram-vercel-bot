@@ -17,27 +17,32 @@ A serverless Telegram bot template built for students. It runs on Vercel's free 
 ```
 VercelTelegramBot/
 ├── api/
-│   └── index.py          # Vercel entrypoint — Flask app + webhook route only
+│   └── index.py          # Vercel entrypoint — Flask app + webhook route + secret verification
 ├── bot/
 │   ├── __init__.py
 │   ├── config.py         # All env vars and constants (edit this to configure the bot)
 │   ├── clients.py        # Instantiates bot, ai, redis clients (do not edit unless adding a client)
-│   ├── history.py        # get/save/clear conversation history in Redis
-│   ├── rate_limit.py     # Per-user daily message rate limiting via Redis
-│   ├── ai.py             # ask_ai() — calls the AI provider and manages history
+│   ├── ai.py             # ask_ai(), _call_ai() with retry, keyword-based search injection, source citations
+│   ├── search.py         # Tavily web search with Redis result caching
+│   ├── history.py        # get/save/clear conversation history in Redis (graceful degradation)
+│   ├── rate_limit.py     # Per-user daily message rate limiting via Redis (graceful degradation)
 │   ├── helpers.py        # send_reply() and should_respond() utilities
 │   └── handlers.py       # All Telegram command and message handlers — add new commands here
 ├── tests/
 │   ├── conftest.py       # Mocks env vars and external packages (telebot, openai, upstash_redis)
+│   ├── test_ai.py        # needs_search() keyword detection tests
+│   ├── test_helpers.py
 │   ├── test_history.py
 │   ├── test_rate_limit.py
-│   └── test_helpers.py
+│   └── test_search.py    # web_search() including cache hit/miss tests
 ├── .github/
 │   └── workflows/
 │       └── ci.yml        # Runs pytest on every push and pull request
 ├── .env.example          # Template for required environment variables
+├── Makefile              # install / test / deploy shortcuts
 ├── requirements.txt
 ├── vercel.json           # Rewrites /api/webhook → api/index.py
+├── CLAUDE.md             # Agent-readable project guide (this file)
 └── README.md             # Student-facing setup guide
 ```
 
@@ -47,10 +52,10 @@ VercelTelegramBot/
 
 1. Telegram sends a POST to `https://<vercel-url>/api/webhook` on every message
 2. `vercel.json` rewrites that path to `api/index.py` (Vercel only recognises specific filenames as Flask entrypoints — `index.py` is one of them)
-3. `api/index.py` deserialises the update and passes it to pyTelegramBotAPI
+3. `api/index.py` validates the `X-Telegram-Bot-Api-Secret-Token` header (if `WEBHOOK_SECRET` is set), then deserialises the update and passes it to pyTelegramBotAPI
 4. pyTelegramBotAPI routes to the correct handler in `bot/handlers.py`
 5. For text messages: checks `should_respond()` → checks rate limit → sends typing action → calls `ask_ai()` → sends reply
-6. `ask_ai()` loads history from Redis, appends the new message, calls the AI, saves updated history, returns the reply
+6. `ask_ai()` loads history from Redis, checks `needs_search()` for keywords, optionally calls `web_search()` (which checks the Redis cache first), prepends results as a system message, calls `_call_ai()` with retry logic, appends source citations to the reply, saves updated history
 
 **Critical:** `telebot.TeleBot` must be created with `threaded=False`. Without this, handlers run in threads that are killed when the serverless function returns — the bot receives the message but never replies.
 
@@ -101,7 +106,7 @@ Web search is powered by the Tavily Search API (`bot/search.py`) and injected as
 - **Safe search:** always `strict` — hardcoded in `bot/search.py`, not configurable
 - **How it works:** `needs_search()` checks the user message for keywords (today, latest, news, etc.). If matched, Tavily is called and results are prepended as a system message before the AI call
 - **Caching:** results are cached in Redis for 10 minutes by query hash — duplicate queries skip Tavily entirely
-- **User visibility:** replies include `_[Web search used]_` when search results were injected
+- **User visibility:** replies include a **Sources:** footer with clickable `[Title](url)` links for every result used
 - **Free tier:** 1,000 searches/month, no credit card required
 - **Getting a key:** go to `tavily.com` → sign up → API Keys → Create API Key
 
