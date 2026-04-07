@@ -5,7 +5,8 @@ from bot.config import MODEL, HF_SPACE_ID
 from bot.preferences import get_provider
 
 # HF Gradio knobs — hardcoded defaults for ArmGPT
-HF_LENGTH = 150
+# 200 tokens at ~5 tok/s ≈ 40s, fits inside Vercel's 60s function timeout
+HF_LENGTH = 200
 HF_TEMPERATURE = 0.8
 HF_TOP_K = 40
 HF_HISTORY_TURNS = 3  # last N turns flattened into the prompt
