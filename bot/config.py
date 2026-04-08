@@ -11,6 +11,7 @@ MODEL       = os.environ.get("AI_MODEL", "llama3.1-8b").strip()
 
 # Hugging Face provider (optional) — when set, users can switch via /model
 HF_SPACE_ID = os.environ.get("HF_SPACE_ID", "").strip()
+HF_TOKEN    = os.environ.get("HF_TOKEN", "").strip()  # optional, for private spaces
 DEFAULT_PROVIDER = "openai"
 
 # Redis

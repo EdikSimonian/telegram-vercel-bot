@@ -91,7 +91,7 @@ def test_call_hf_calls_gradio_client():
         with patch.object(gradio_client, "Client", return_value=mock_client) as mock_cls:
             from bot.providers import _call_hf
             result = _call_hf([{"role": "user", "content": "Բարև"}])
-            mock_cls.assert_called_once_with("edisimon/armgpt-demo")
+            mock_cls.assert_called_once_with("edisimon/armgpt-demo", hf_token=None)
             mock_client.predict.assert_called_once()
             assert "Armenian response" in result
 

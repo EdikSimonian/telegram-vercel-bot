@@ -1,7 +1,7 @@
 import re
 import time
 from bot.clients import ai
-from bot.config import MODEL, HF_SPACE_ID
+from bot.config import MODEL, HF_SPACE_ID, HF_TOKEN
 from bot.preferences import get_provider
 
 # HF Gradio knobs — hardcoded defaults for ArmGPT
@@ -50,7 +50,7 @@ def _call_hf(messages: list) -> str:
     from gradio_client import Client
 
     prompt = _last_user_message(messages)
-    client = Client(HF_SPACE_ID)
+    client = Client(HF_SPACE_ID, hf_token=HF_TOKEN or None)
     result = client.predict(
         prompt,
         HF_LENGTH,
